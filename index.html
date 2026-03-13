@@ -2,12 +2,15 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>牌九勝率分析 (USB版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>牌九勝率分析 (Online版)</title>
     <style>
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', Roboto, sans-serif;
+            /* 背景圖片設定 */
             background: url('https://raw.githubusercontent.com/alexkong123/PG-Game/04136cf202a2722f5d3e1070eb34d2030f698a35/image/PGB.jpg') no-repeat center center fixed;
+            background-size: cover;
             margin: 0;
             padding: 20px;
             color: #e6e9f0;
@@ -77,10 +80,11 @@
             min-height: 24px;
         }
 
+        /* 主要容器 – 半透明背景讓底圖透出 */
         .container {
             max-width: 1400px;
             margin: auto;
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(240, 244, 250, 0.85); /* 原 #f0f4fa 改為半透明 */
             border-radius: 28px;
             padding: 30px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
@@ -179,7 +183,6 @@
             border-radius: 12px; background: white; padding: 6px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.25);
             border: 2px solid #ffd966;
-            /* 圖片清晰度優化 */
             image-rendering: crisp-edges;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
@@ -261,7 +264,6 @@
         .gallery-item img {
             width: 100%; height: 100%; object-fit: contain;
             background: white; border-radius: 10px; padding: 4px;
-            /* 圖片清晰度優化 */
             image-rendering: crisp-edges;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
@@ -409,7 +411,6 @@
             width: 100%; height: 100%; object-fit: contain;
             background: white; border-radius: 8px;
             padding: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            /* 圖片清晰度優化 */
             image-rendering: crisp-edges;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
@@ -451,7 +452,6 @@
             width: 100%; height: 100%; object-fit: contain;
             background: white; border-radius: 8px; padding: 4px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            /* 圖片清晰度優化 */
             image-rendering: crisp-edges;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
@@ -690,8 +690,8 @@
 
         <div class="error-msg" id="errorMsg"></div>
         <div class="footer">
-            🎴 牌九 32 張｜圖片路徑：IMAGE/牌名.png（HTML 放在 PG 資料夾內）<br>
-            💡 若圖片仍模糊，建議替換為更高解析度的圖檔（保持相同檔名），CSS 已針對點陣圖最佳化。
+            🎴 牌九 32 張｜圖片來源：GitHub (alexkong123/PG-Game)<br>
+            💡 背景圖片：PGB.jpg
         </div>
     </div>
 
@@ -730,6 +730,9 @@
                 "板凳": 25, "斧頭": 24, "紅頭": 23, "高腳七": 22, "零霖六": 21,
                 "雜九": 16, "雜八": 15, "雜七": 14, "雜五": 13, "二四": 12, "幺二": 11
             };
+
+            // ---------- 圖片路徑：指向 GitHub 上的 IMAGE 資料夾 ----------
+            const IMAGE_PATH = 'https://raw.githubusercontent.com/alexkong123/PG-Game/04136cf202a2722f5d3e1070eb34d2030f698a35/image/';
 
             // ---------- 輔助函數 ----------
             function getBestPoints(cardA, cardB) {
@@ -875,7 +878,6 @@
             // ---------- UI 狀態 ----------
             let selectedCards = [];
             const MAX_SELECT = 4;
-            const IMAGE_PATH = 'https://raw.githubusercontent.com/alexkong123/PG-Game/beb93ae493de435ff16313042fd96bda7f2a2ed6/image/';
 
             let historyRecords = [];
             let currentStrategy = 'win';
@@ -1312,9 +1314,9 @@
                 const url = URL.createObjectURL(blob);
                 link.href = url;
                 link.setAttribute('download', '牌九歷史記錄.csv');
-                document..appendChild(link);
+                document.body.appendChild(link);
                 link.click();
-                document..removeChild(link);
+                document.body.removeChild(link);
                 URL.revokeObjectURL(url);
             }
             window.exportHistoryCSV = exportHistoryCSV;
