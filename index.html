@@ -464,12 +464,12 @@
             color: #2c3e50; font-size: 12px;
         }
 
-        /* 系統建議框 (精簡版) */
+        /* 系統建議框 (調小版) */
         .advice-box {
             background: #2d3f5e;
-            border-radius: 24px;
-            padding: 15px;
-            min-width: 160px;
+            border-radius: 16px;        /* 從24px調小 */
+            padding: 8px;               /* 從15px調小 */
+            min-width: 120px;            /* 從160px調小 */
             flex: 0 0 auto;
             border: 2px solid #ffd966;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
@@ -479,7 +479,7 @@
             text-align: center;
         }
         .advice-text {
-            font-size: 2rem;
+            font-size: 1.5rem;           /* 從2rem調小 */
             font-weight: 800;
             line-height: 1.2;
             color: white;
@@ -642,10 +642,10 @@
                             <div id="strategyDrawBtn" class="strategy-btn draw" onclick="setStrategy('draw')">🛡️ 和局優先</div>
                         </div>
 
-                        <!-- 推薦配牌 + 系統建議 (只顯示四個字) -->
+                        <!-- 推薦配牌 + 系統建議 (現在包含標籤) -->
                         <div class="best-group-title">🏠 推薦配牌 & 系統建議</div>
                         <div class="group-row" id="recommendedDisplay">
-                            <!-- 由 JavaScript 動態填入：頭墩、尾墩、建議框 -->
+                            <!-- 由 JavaScript 動態填入：頭墩、尾墩、含標籤的建議框 -->
                         </div>
 
                         <!-- 勝率卡片 -->
@@ -995,12 +995,22 @@
                 recBackDiv.innerHTML = '<div class="group-label">尾墩</div><div class="group-cards" id="recBack"></div>';
                 recContainer.appendChild(recBackDiv);
 
-                // 系統建議框 (只顯示四個大字)
+                // --- 系統建議容器 (含標籤 + 建議框) ---
+                let adviceWrapper = document.createElement('div');
+                adviceWrapper.className = 'group-box';  // 與頭墩尾墩相同的樣式容器
+                // 標籤
+                let adviceLabel = document.createElement('div');
+                adviceLabel.className = 'group-label';
+                adviceLabel.textContent = '系統建議';
+                adviceWrapper.appendChild(adviceLabel);
+                // 建議框
                 let adviceDiv = document.createElement('div');
                 adviceDiv.className = 'advice-box';
                 adviceDiv.id = 'adviceBox';
                 adviceDiv.innerHTML = '<div class="advice-text" id="adviceText">勝出優先</div>';
-                recContainer.appendChild(adviceDiv);
+                adviceWrapper.appendChild(adviceDiv);
+
+                recContainer.appendChild(adviceWrapper);
 
                 // 渲染頭尾墩
                 renderHand('recFront', bestGroup.front);
