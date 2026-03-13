@@ -7,7 +7,7 @@
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', Roboto, sans-serif;
-            background: #1e2a3a;
+            background: url('https://raw.githubusercontent.com/alexkong123/PG-Game/04136cf202a2722f5d3e1070eb34d2030f698a35/image/PGB.jpg') no-repeat center center fixed;
             margin: 0;
             padding: 20px;
             color: #e6e9f0;
@@ -80,7 +80,7 @@
         .container {
             max-width: 1400px;
             margin: auto;
-            background: #f0f4fa;
+            background: rgba(255, 255, 255, 0.85);
             border-radius: 28px;
             padding: 30px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
@@ -1312,9 +1312,9 @@
                 const url = URL.createObjectURL(blob);
                 link.href = url;
                 link.setAttribute('download', '牌九歷史記錄.csv');
-                document.body.appendChild(link);
+                document..appendChild(link);
                 link.click();
-                document.body.removeChild(link);
+                document..removeChild(link);
                 URL.revokeObjectURL(url);
             }
             window.exportHistoryCSV = exportHistoryCSV;
