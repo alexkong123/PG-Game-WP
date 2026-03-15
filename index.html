@@ -8,7 +8,6 @@
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', Roboto, sans-serif;
-            /* 背景圖片設定 */
             background: url('https://raw.githubusercontent.com/alexkong123/PG-Game/04136cf202a2722f5d3e1070eb34d2030f698a35/image/PGB.jpg') no-repeat center center fixed;
             background-size: cover;
             margin: 0;
@@ -145,7 +144,6 @@
         .dev-box button.upload { background: #3498db; }
         .dev-box button.download { background: #f39c12; }
         .dev-box button.text-rule { background: #9b59b6; }
-        .dev-box button.copy { background: #e67e22; }
         .dev-box button.change-pw { background: #1abc9c; }
         .dev-box button.cancel {
             background: #7f8c8d;
@@ -264,7 +262,7 @@
             white-space: pre-wrap;
         }
 
-        /* 主要容器 – 半透明背景讓底圖透出，固定寬度 */
+        /* 主要容器 */
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -796,7 +794,7 @@
         </div>
     </div>
 
-    <!-- 開發者彈窗 -->
+    <!-- 開發者彈窗 (移除複製按鈕) -->
     <div id="devOverlay" class="dev-overlay">
         <div class="dev-box">
             <h3>🔧 開發者模式</h3>
@@ -805,7 +803,6 @@
                 <button class="upload" id="devUploadBtn">📤 上傳新規則</button>
                 <button class="download" id="devDownloadBtn">📥 下載規則範本 (Word)</button>
                 <button class="text-rule" id="devTextRuleBtn">📝 輸入規則文字</button>
-                <button class="copy" id="devCopyBtn">📋 複製規則內容</button>
                 <button class="change-pw" id="devChangeLoginPwBtn">🔑 修改登入密碼</button>
                 <button class="change-pw" id="devChangeDevPwBtn">🔒 修改開發者密碼</button>
             </div>
@@ -916,7 +913,7 @@
         <div class="error-msg" id="errorMsg"></div>
         <div class="footer">
             🎴 牌九 32 張｜圖片來源：GitHub (alexkong123/PG-Game)<br>
-            💡 程式開發者Alex Kong 版本:V 01.00.0
+            💡 開發者 ALEX KONG 版本:V01.00.00
         </div>
     </div>
 
@@ -1202,14 +1199,13 @@
             });
             passwordInput.addEventListener('keypress', e => { if (e.key === 'Enter') submitBtn.click(); });
 
-            // ---------- 開發者功能 ----------
+            // ---------- 開發者功能 (移除複製相關) ----------
             const devOverlay = document.getElementById('devOverlay');
             const devButton = document.getElementById('devButton');
             const devPassword = document.getElementById('devPassword');
             const devUploadBtn = document.getElementById('devUploadBtn');
             const devDownloadBtn = document.getElementById('devDownloadBtn');
             const devTextRuleBtn = document.getElementById('devTextRuleBtn');
-            const devCopyBtn = document.getElementById('devCopyBtn');
             const devChangeLoginPwBtn = document.getElementById('devChangeLoginPwBtn');
             const devChangeDevPwBtn = document.getElementById('devChangeDevPwBtn');
             const devCancelBtn = document.getElementById('devCancelBtn');
@@ -1258,9 +1254,13 @@
                 document.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', function(e) {
                         const index = this.dataset.index;
-                        if (devPassword.value !== getDevPassword()) {
-                            devMessage.textContent = '❌ 開發者密碼錯誤，無法刪除';
-                            return;
+                        let inputPw = devPassword.value;
+                        if (inputPw !== getDevPassword()) {
+                            inputPw = prompt('請輸入開發者密碼以刪除規則：');
+                            if (inputPw !== getDevPassword()) {
+                                devMessage.textContent = '❌ 開發者密碼錯誤，無法刪除';
+                                return;
+                            }
                         }
                         if (!confirm('確定要刪除此規則嗎？')) return;
                         customRules.splice(index, 1);
@@ -1318,11 +1318,6 @@
                 } else devMessage.textContent = '❌ 開發者密碼錯誤';
             });
 
-            devCopyBtn.addEventListener('click', () => {
-                if (devPassword.value === getDevPassword()) copyRulesToClipboard();
-                else devMessage.textContent = '❌ 開發者密碼錯誤';
-            });
-
             devChangeLoginPwBtn.addEventListener('click', () => {
                 if (devPassword.value === getDevPassword()) {
                     currentPwTarget = 'login';
@@ -1361,7 +1356,7 @@
             cancelTextBtn.addEventListener('click', () => { devTextArea.style.display = 'none'; rulePreview.style.display = 'none'; });
             devCancelBtn.addEventListener('click', () => devOverlay.style.display = 'none');
 
-            // ---------- 智慧規則解析器 ----------
+            // ---------- 智慧規則解析器 (支援「搭配」結構) ----------
             function parseChineseNumber(str) {
                 const map = {'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10};
                 if (str.match(/^\d+$/)) return parseInt(str,10);
@@ -1401,23 +1396,61 @@
                 if (actionStr.includes('頭墩比尾墩小') || actionStr.includes('頭墩小於尾墩')) actions.push({ type:'front_less_than_back' });
                 return actions;
             }
+
+            function parseConditionFragment(fragment) {
+                const condition = {};
+                const matches = fragment.matchAll(/([一二兩三四五六七八九十\d]+)\s*張?\s*([^、，,\s]+)/g);
+                for (const match of matches) {
+                    const numStr = match[1];
+                    const typeName = match[2].trim();
+                    let count = parseChineseNumber(numStr);
+                    condition[typeName] = (condition[typeName] || 0) + count;
+                }
+                return condition;
+            }
+
             function parseCondition(conditionStr) {
                 if (!conditionStr) return [null];
-                const parts = conditionStr.split(/[、，,和]+/).map(s => s.trim()).filter(s => s.length > 0);
-                const conditions = [];
-                for (let part of parts) {
-                    const condition = {};
-                    const matches = part.matchAll(/([一二兩三四五六七八九十\d]+)\s*張?\s*([^、，,\s]+)/g);
-                    for (const match of matches) {
-                        const numStr = match[1];
-                        const typeName = match[2].trim();
-                        let count = parseChineseNumber(numStr);
-                        condition[typeName] = (condition[typeName] || 0) + count;
+                if (conditionStr.includes('搭配')) {
+                    const parts = conditionStr.split('搭配');
+                    const fixedPart = parts[0].trim();
+                    const optionalPart = parts[1].trim();
+                    
+                    const fixedConditions = [];
+                    const fixedFragments = fixedPart.split(/[、，,和]+/).map(s => s.trim()).filter(s => s.length > 0);
+                    for (let frag of fixedFragments) {
+                        const cond = parseConditionFragment(frag);
+                        if (Object.keys(cond).length > 0) fixedConditions.push(cond);
                     }
-                    if (Object.keys(condition).length > 0) conditions.push(condition);
+                    const fixedCond = {};
+                    fixedConditions.forEach(c => {
+                        for (let [type, cnt] of Object.entries(c)) {
+                            fixedCond[type] = (fixedCond[type] || 0) + cnt;
+                        }
+                    });
+                    
+                    const optionalItems = optionalPart.split(/或|或者/).map(s => s.trim()).filter(s => s.length > 0);
+                    const resultConditions = [];
+                    for (let item of optionalItems) {
+                        const itemCond = parseConditionFragment(item);
+                        const combined = { ...fixedCond };
+                        for (let [type, cnt] of Object.entries(itemCond)) {
+                            combined[type] = (combined[type] || 0) + cnt;
+                        }
+                        resultConditions.push(combined);
+                    }
+                    return resultConditions.length > 0 ? resultConditions : [null];
+                } else {
+                    const parts = conditionStr.split(/[、，,和]+/).map(s => s.trim()).filter(s => s.length > 0);
+                    const conditions = [];
+                    for (let part of parts) {
+                        const condition = parseConditionFragment(part);
+                        if (Object.keys(condition).length > 0) conditions.push(condition);
+                    }
+                    return conditions.length > 0 ? conditions : [null];
                 }
-                return conditions.length > 0 ? conditions : [null];
             }
+
             function parseSingleRule(sentence) {
                 let conditionPart = '';
                 let actionPart = sentence;
@@ -1437,6 +1470,7 @@
                 }
                 return result;
             }
+
             function parseNaturalRule(text) {
                 const rules = [];
                 const sentences = text.split(/[。；\n]+/).filter(s => s.trim().length > 0);
@@ -1470,67 +1504,11 @@
                     document.getElementById('loseRate').innerText = '0%';
                     document.getElementById('totalOpp').innerText = '0';
                     renderRuleList();
+                    setTimeout(() => devOverlay.style.display = 'none', 1500);
                 } else devMessage.textContent = '❌ 無法解析規則，請嘗試不同的描述方式';
             });
 
-            function copyRulesToClipboard() {
-                try {
-                    const rulesData = { tiles, tileDetails, rankMap, rules: customRules };
-                    const jsonStr = JSON.stringify(rulesData, null, 2);
-                    navigator.clipboard.writeText(jsonStr).then(() => {
-                        devMessage.textContent = '✅ 規則內容已複製到剪貼板！請貼至郵件發送給開發者 (siieokkong@gmail.com)';
-                        setTimeout(() => devOverlay.style.display = 'none', 2000);
-                    }).catch(err => devMessage.textContent = '❌ 複製失敗：' + err.message);
-                } catch (err) { devMessage.textContent = '❌ 複製失敗：' + err.message; }
-            }
-
-            devFileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                if (currentDevAction === 'upload') {
-                    const reader = new FileReader();
-                    reader.onload = function(ev) {
-                        try {
-                            const newRules = JSON.parse(ev.target.result);
-                            if (!Array.isArray(newRules.tiles) || !newRules.tileDetails || !newRules.rankMap)
-                                throw new Error('JSON 必須包含 tiles (陣列), tileDetails (物件), rankMap (物件)');
-                            const typeSet = new Set();
-                            for (let card of newRules.tiles) {
-                                if (!newRules.tileDetails[card]) throw new Error(`牌 ${card} 缺少詳細資料`);
-                                const detail = newRules.tileDetails[card];
-                                if (typeof detail.type !== 'string' || typeof detail.d1 !== 'number' || typeof detail.d2 !== 'number')
-                                    throw new Error(`牌 ${card} 的詳細資料格式不正確`);
-                                typeSet.add(detail.type);
-                            }
-                            for (let type of typeSet) {
-                                if (newRules.rankMap[type] === undefined)
-                                    throw new Error(`牌型「${type}」在 rankMap 中未定義`);
-                            }
-                            tiles = newRules.tiles;
-                            tileDetails = newRules.tileDetails;
-                            rankMap = newRules.rankMap;
-                            customRules = newRules.rules || [];
-                            saveRulesToStorage(customRules);
-                            allCombinations = generateAllCombinations();
-                            selectedCards = [];
-                            currentHandStats = null; currentHand = null;
-                            updateSelectedUI(); renderGallery();
-                            document.getElementById('resultHandDisplay').innerHTML = '';
-                            document.getElementById('recommendedDisplay').innerHTML = '';
-                            document.getElementById('winRate').innerText = '0%';
-                            document.getElementById('drawRate').innerText = '0%';
-                            document.getElementById('loseRate').innerText = '0%';
-                            document.getElementById('totalOpp').innerText = '0';
-                            devMessage.textContent = '✅ 規則更新成功！';
-                            renderRuleList();
-                            setTimeout(() => devOverlay.style.display = 'none', 1500);
-                        } catch (err) { devMessage.textContent = '❌ 解析失敗：' + err.message; }
-                    };
-                    reader.readAsText(file);
-                }
-                devFileInput.value = '';
-            });
-
+            // 下載 Word 範本 (與前版相同)
             function downloadWordTemplate() {
                 try {
                     const htmlContent = `<!DOCTYPE html>
@@ -1609,6 +1587,53 @@
                     setTimeout(() => devOverlay.style.display = 'none', 1500);
                 } catch (err) { devMessage.textContent = '❌ 下載失敗：' + err.message; }
             }
+
+            devFileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (currentDevAction === 'upload') {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        try {
+                            const newRules = JSON.parse(ev.target.result);
+                            if (!Array.isArray(newRules.tiles) || !newRules.tileDetails || !newRules.rankMap)
+                                throw new Error('JSON 必須包含 tiles (陣列), tileDetails (物件), rankMap (物件)');
+                            const typeSet = new Set();
+                            for (let card of newRules.tiles) {
+                                if (!newRules.tileDetails[card]) throw new Error(`牌 ${card} 缺少詳細資料`);
+                                const detail = newRules.tileDetails[card];
+                                if (typeof detail.type !== 'string' || typeof detail.d1 !== 'number' || typeof detail.d2 !== 'number')
+                                    throw new Error(`牌 ${card} 的詳細資料格式不正確`);
+                                typeSet.add(detail.type);
+                            }
+                            for (let type of typeSet) {
+                                if (newRules.rankMap[type] === undefined)
+                                    throw new Error(`牌型「${type}」在 rankMap 中未定義`);
+                            }
+                            tiles = newRules.tiles;
+                            tileDetails = newRules.tileDetails;
+                            rankMap = newRules.rankMap;
+                            customRules = newRules.rules || [];
+                            saveRulesToStorage(customRules);
+                            allCombinations = generateAllCombinations();
+                            selectedCards = [];
+                            currentHandStats = null; currentHand = null;
+                            updateSelectedUI(); renderGallery();
+                            document.getElementById('resultHandDisplay').innerHTML = '';
+                            document.getElementById('recommendedDisplay').innerHTML = '';
+                            document.getElementById('winRate').innerText = '0%';
+                            document.getElementById('drawRate').innerText = '0%';
+                            document.getElementById('loseRate').innerText = '0%';
+                            document.getElementById('totalOpp').innerText = '0';
+                            devMessage.textContent = '✅ 規則更新成功！';
+                            renderRuleList();
+                            setTimeout(() => devOverlay.style.display = 'none', 1500);
+                        } catch (err) { devMessage.textContent = '❌ 解析失敗：' + err.message; }
+                    };
+                    reader.readAsText(file);
+                }
+                devFileInput.value = '';
+            });
 
             // ---------- 主要功能函數 ----------
             function setStrategy(strategy) {
@@ -1716,6 +1741,22 @@
                 let bestWinIdx = getBestIndexByStrategy('win', legalGroups, groupStats);
                 let bestDrawIdx = getBestIndexByStrategy('draw', legalGroups, groupStats);
                 if (bestWinIdx === bestDrawIdx) {
+                    adviceText.innerText = '';
+                    adviceBox.classList.remove('advice-win', 'advice-draw', 'advice-gray', 'advice-rule');
+                    adviceBox.classList.add('advice-gray');
+                    return;
+                }
+                // 浮點容差檢查
+                let winGroup = groupStats[bestWinIdx];
+                let drawGroup = groupStats[bestDrawIdx];
+                let totalWin = winGroup.win + winGroup.draw + winGroup.lose;
+                let totalDraw = drawGroup.win + drawGroup.draw + drawGroup.lose;
+                let winRateWin = winGroup.win / totalWin;
+                let drawRateWin = winGroup.draw / totalWin;
+                let winRateDraw = drawGroup.win / totalDraw;
+                let drawRateDraw = drawGroup.draw / totalDraw;
+                const EPS = 1e-6;
+                if (Math.abs(winRateWin - winRateDraw) < EPS && Math.abs(drawRateWin - drawRateDraw) < EPS) {
                     adviceText.innerText = '';
                     adviceBox.classList.remove('advice-win', 'advice-draw', 'advice-gray', 'advice-rule');
                     adviceBox.classList.add('advice-gray');
