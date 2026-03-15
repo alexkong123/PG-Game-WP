@@ -965,52 +965,53 @@
                 localStorage.setItem(STORAGE_THRESHOLD, val.toString());
             }
 
-            // ---------- 牌九核心資料 ----------
+            // ---------- 牌九核心資料 (已替換名稱) ----------
             const tiles = [
-                "天牌A", "天牌B", "地牌A", "地牌B", "人牌A", "人牌B", "和牌A", "和牌B",
+                "天牌A", "天牌B", "地牌A", "地牌B", "人牌A", "人牌B", "鵝牌A", "鵝牌B",
                 "梅牌A", "梅牌B", "長三A", "長三B", "板凳A", "板凳B", "斧頭A", "斧頭B",
-                "紅頭A", "紅頭B", "高腳七A", "高腳七B", "零霖六A", "零霖六B",
+                "紅頭A", "紅頭B", "高腳七A", "高腳七B", "拎冧六A", "拎冧六B",
                 "雜九A", "雜九B", "雜八A", "雜八B", "雜七A", "雜七B", "雜五A", "雜五B",
-                "二四", "幺二"
+                "大雞", "細雞"
             ];
 
             const tileDetails = {
                 "天牌A":{type:"天牌", d1:6,d2:6},"天牌B":{type:"天牌", d1:6,d2:6},
                 "地牌A":{type:"地牌", d1:1,d2:1},"地牌B":{type:"地牌", d1:1,d2:1},
                 "人牌A":{type:"人牌", d1:4,d2:4},"人牌B":{type:"人牌", d1:4,d2:4},
-                "和牌A":{type:"和牌", d1:1,d2:3},"和牌B":{type:"和牌", d1:1,d2:3},
+                "鵝牌A":{type:"鵝牌", d1:1,d2:3},"鵝牌B":{type:"鵝牌", d1:1,d2:3},
                 "梅牌A":{type:"梅牌", d1:5,d2:5},"梅牌B":{type:"梅牌", d1:5,d2:5},
                 "長三A":{type:"長三", d1:3,d2:3},"長三B":{type:"長三", d1:3,d2:3},
                 "板凳A":{type:"板凳", d1:2,d2:2},"板凳B":{type:"板凳", d1:2,d2:2},
                 "斧頭A":{type:"斧頭", d1:5,d2:6},"斧頭B":{type:"斧頭", d1:5,d2:6},
                 "紅頭A":{type:"紅頭", d1:4,d2:6},"紅頭B":{type:"紅頭", d1:4,d2:6},
                 "高腳七A":{type:"高腳七", d1:1,d2:6},"高腳七B":{type:"高腳七", d1:1,d2:6},
-                "零霖六A":{type:"零霖六", d1:2,d2:4},"零霖六B":{type:"零霖六", d1:2,d2:4},
+                "拎冧六A":{type:"拎冧六", d1:2,d2:4},"拎冧六B":{type:"拎冧六", d1:2,d2:4},
                 "雜九A":{type:"雜九", d1:4,d2:5},"雜九B":{type:"雜九", d1:3,d2:6},
                 "雜八A":{type:"雜八", d1:2,d2:6},"雜八B":{type:"雜八", d1:3,d2:5},
                 "雜七A":{type:"雜七", d1:2,d2:5},"雜七B":{type:"雜七", d1:3,d2:4},
                 "雜五A":{type:"雜五", d1:1,d2:4},"雜五B":{type:"雜五", d1:2,d2:3},
-                "二四":{type:"二四", d1:2,d2:4},"幺二":{type:"幺二", d1:1,d2:2}
+                "大雞":{type:"大雞", d1:2,d2:4},
+                "細雞":{type:"細雞", d1:1,d2:2}
             };
 
             const rankMap = {
-                "天牌":31,"地牌":30,"人牌":29,"和牌":28,"梅牌":27,"長三":26,
-                "板凳":25,"斧頭":24,"紅頭":23,"高腳七":22,"零霖六":21,
-                "雜九":16,"雜八":15,"雜七":14,"雜五":13,"二四":12,"幺二":11
+                "天牌":31,"地牌":30,"人牌":29,"鵝牌":28,"梅牌":27,"長三":26,
+                "板凳":25,"斧頭":24,"紅頭":23,"高腳七":22,"拎冧六":21,
+                "雜九":16,"雜八":15,"雜七":14,"雜五":13,"大雞":12,"細雞":11
             };
 
             let customRules = loadRulesFromStorage();
 
             const IMAGE_PATH = 'https://raw.githubusercontent.com/alexkong123/PG-Game/04136cf202a2722f5d3e1070eb34d2030f698a35/image/';
 
-            // ---------- 輔助函數 ----------
+            // ---------- 輔助函數 (注意：函數中對 "二四" 和 "幺二" 的判斷已改為 "大雞" 和 "細雞") ----------
             function getBestPoints(cardA, cardB) {
                 let a = tileDetails[cardA], b = tileDetails[cardB];
                 let pointsA = a.d1 + a.d2;
                 let pointsB = b.d1 + b.d2;
                 let variableCards = [];
-                if (a.type === "二四" || a.type === "幺二") variableCards.push({card: cardA, base: pointsA});
-                if (b.type === "二四" || b.type === "幺二") variableCards.push({card: cardB, base: pointsB});
+                if (a.type === "大雞" || a.type === "細雞") variableCards.push({card: cardA, base: pointsA});
+                if (b.type === "大雞" || b.type === "細雞") variableCards.push({card: cardB, base: pointsB});
                 if (variableCards.length === 0) return (pointsA + pointsB) % 10;
                 let best = -1;
                 if (variableCards.length === 1) {
@@ -1033,7 +1034,7 @@
                 if (cardA === cardB) return -1;
                 let a = tileDetails[cardA], b = tileDetails[cardB];
                 if (!a || !b) return -1;
-                if ((a.type === "二四" && b.type === "幺二") || (a.type === "幺二" && b.type === "二四")) return 40000;
+                if ((a.type === "大雞" && b.type === "細雞") || (a.type === "細雞" && b.type === "大雞")) return 40000;
                 if (a.type === b.type) return 30000 + rankMap[a.type] * 100;
                 let typeA = a.type, typeB = b.type;
                 if ((typeA === "天牌" && typeB === "雜九") || (typeA === "雜九" && typeB === "天牌")) return 29500;
