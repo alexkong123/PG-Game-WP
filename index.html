@@ -1002,9 +1002,9 @@
 
             let customRules = loadRulesFromStorage();
 
-            const IMAGE_PATH = 'https://raw.githubusercontent.com/alexkong123/PG-Game/main/image/';
+            const IMAGE_PATH = 'https://raw.githubusercontent.com/alexkong123/PG-Game/04136cf202a2722f5d3e1070eb34d2030f698a35/image/';
 
-            // ---------- 輔助函數 (注意：函數中對 "二四" 和 "幺二" 的判斷已改為 "大雞" 和 "細雞") ----------
+            // ---------- 輔助函數 ----------
             function getBestPoints(cardA, cardB) {
                 let a = tileDetails[cardA], b = tileDetails[cardB];
                 let pointsA = a.d1 + a.d2;
@@ -1030,12 +1030,23 @@
                 return best;
             }
 
+            // 修正後的 getRank，點數權重 1000 確保點數大的墩必大
             function getRank(cardA, cardB) {
                 if (cardA === cardB) return -1;
                 let a = tileDetails[cardA], b = tileDetails[cardB];
                 if (!a || !b) return -1;
-                if ((a.type === "大雞" && b.type === "細雞") || (a.type === "細雞" && b.type === "大雞")) return 40000;
-                if (a.type === b.type) return 30000 + rankMap[a.type] * 100;
+
+                // 至尊寶（大雞+細雞）
+                if ((a.type === "大雞" && b.type === "細雞") || (a.type === "細雞" && b.type === "大雞")) {
+                    return 40000;
+                }
+
+                // 對子
+                if (a.type === b.type) {
+                    return 30000 + rankMap[a.type] * 100;
+                }
+
+                // 特殊組合（天皇、地皇、天槓、地槓）
                 let typeA = a.type, typeB = b.type;
                 if ((typeA === "天牌" && typeB === "雜九") || (typeA === "雜九" && typeB === "天牌")) return 29500;
                 if ((typeA === "地牌" && typeB === "雜九") || (typeA === "雜九" && typeB === "地牌")) return 29400;
@@ -1043,11 +1054,13 @@
                     (typeB === "天牌" && (typeA === "人牌" || typeA === "雜八"))) return 29300;
                 if ((typeA === "地牌" && (typeB === "人牌" || typeB === "雜八")) || 
                     (typeB === "地牌" && (typeA === "人牌" || typeA === "雜八"))) return 29200;
+
+                // 一般組合：點數優先，無基底，點數權重 1000 足以壓過 rank 差異
                 let rankA = rankMap[typeA], rankB = rankMap[typeB];
                 let points = getBestPoints(cardA, cardB);
                 let maxRank = Math.max(rankA, rankB);
                 let minRank = Math.min(rankA, rankB);
-                return 20000 + points * 100 + maxRank * 10 + minRank;
+                return points * 1000 + maxRank * 10 + minRank;
             }
 
             function comparePair(p1, p2) {
